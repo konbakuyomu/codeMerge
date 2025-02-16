@@ -9,6 +9,14 @@
 
 一个用于提取和统计代码文件内容的Web工具，特别适合准备用于大语言模型（如GPT、Claude）的代码分析。
 
+## 界面预览
+
+![Main Interface](./images/img1.png)
+*Main Interface - Supporting file upload and configuration*
+
+![Statistics Result](./images/img2.png)
+*Statistics Result - Showing detailed token and character statistics*
+
 ## 功能特点
 
 - 📁 支持文件夹和单个文件上传
@@ -113,6 +121,14 @@ MIT License
 # Code File Content Extraction and Statistics Tool
 
 A web-based tool for extracting and analyzing code file contents, particularly suitable for preparing code analysis for Large Language Models (like GPT, Claude).
+
+## Interface Preview
+
+![Main Interface](./images/img1.png)
+*Main Interface - Supporting file upload and configuration*
+
+![Statistics Result](./images/img2.png)
+*Statistics Result - Showing detailed token and character statistics*
 
 ## Features
 

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>代码文件内容提取与统计工具</title>
+    <title>Code File Content Extraction and Statistics Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gpt-3-encoder/dist/gpt-3-encoder.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify.min.js"></script>
@@ -61,29 +61,37 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">代码文件内容提取与统计工具</h1>
+        <!-- 添加语言切换按钮 -->
+        <div class="flex justify-end mb-4">
+            <button id="langToggle" 
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors">
+                中文
+            </button>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center" data-lang="title">Code File Content Extraction and Statistics Tool</h1>
         
         <div class="bg-white rounded-xl shadow-lg p-8 mb-6 space-y-6">
             <!-- 文件上传区域 -->
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="upload-area rounded-lg p-6 text-center">
-                    <label class="block text-lg font-medium text-gray-700 mb-4">文件夹上传</label>
+                    <label class="block text-lg font-medium text-gray-700 mb-4" data-lang="folderUpload">文件夹上传</label>
                     <input type="file" id="folderInput" webkitdirectory directory multiple
                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-sm text-gray-500 mt-2">选择整个文件夹进行分析</p>
+                    <p class="text-sm text-gray-500 mt-2" data-lang="folderUploadDesc">选择整个文件夹进行分析</p>
                 </div>
                 
                 <div class="upload-area rounded-lg p-6 text-center">
-                    <label class="block text-lg font-medium text-gray-700 mb-4">文件上传</label>
+                    <label class="block text-lg font-medium text-gray-700 mb-4" data-lang="fileUpload">文件上传</label>
                     <input type="file" id="fileInput" multiple
                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-sm text-gray-500 mt-2">选择一个或多个文件</p>
+                    <p class="text-sm text-gray-500 mt-2" data-lang="fileUploadDesc">选择一个或多个文件</p>
                 </div>
             </div>
 
             <!-- 选中文件列表 -->
             <div id="selectedFiles" class="file-list mt-6 border rounded-lg p-4 hidden bg-gray-50">
-                <h3 class="text-lg font-medium text-gray-700 mb-3">已选择的文件</h3>
+                <h3 class="text-lg font-medium text-gray-700 mb-3" data-lang="selectedFiles">已选择的文件</h3>
                 <div id="fileList" class="space-y-2">
                     <!-- 文件列表将在这里动态显示 -->
                 </div>
@@ -92,18 +100,18 @@
             <!-- 选项设置区域 -->
             <div class="grid md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-lg">
                 <div class="space-y-4">
-                    <h3 class="text-lg font-medium text-gray-700">代码处理选项</h3>
+                    <h3 class="text-lg font-medium text-gray-700" data-lang="codeProcessingOptions">代码处理选项</h3>
                     <label class="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
                         <input type="checkbox" id="compressCode" class="w-5 h-5 rounded text-blue-600">
                         <div>
-                            <span class="text-gray-700 font-medium">压缩代码</span>
-                            <p class="text-sm text-gray-500 mt-1">删除多余空格、换行等，减少文件大小</p>
+                            <span class="text-gray-700 font-medium" data-lang="compressCode">压缩代码</span>
+                            <p class="text-sm text-gray-500 mt-1" data-lang="compressCodeDesc">删除多余空格、换行等，减少文件大小</p>
                         </div>
                     </label>
                 </div>
 
                 <div class="space-y-4">
-                    <h3 class="text-lg font-medium text-gray-700">Token计算模型</h3>
+                    <h3 class="text-lg font-medium text-gray-700" data-lang="tokenCalcModel">Token计算模型</h3>
                     <div class="space-y-3 bg-white p-4 rounded-lg shadow-sm">
                         <label class="flex items-center space-x-3">
                             <input type="radio" name="tokenModel" value="gpt3" checked
@@ -127,47 +135,47 @@
             <!-- 添加黑名单设置区域 -->
             <div class="p-4 bg-gray-50 rounded-lg">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-gray-700">黑名单设置</h3>
+                    <h3 class="text-lg font-medium text-gray-700" data-lang="blacklistSettings">黑名单设置</h3>
                     <button onclick="saveBlacklist()" 
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-                        保存设置
+                        <span data-lang="saveSettings">保存设置</span>
                     </button>
                 </div>
                 <div class="mb-4">
-                    <p class="text-sm text-gray-600 mb-2">这些文件夹将被自动跳过处理：</p>
+                    <p class="text-sm text-gray-600 mb-2" data-lang="blacklistDesc">这些文件夹将被自动跳过处理：</p>
                     <textarea id="blacklistInput" rows="6" 
                         class="w-full p-3 border rounded-lg text-sm font-mono"
                         placeholder="每行输入一个文件夹名称"></textarea>
                 </div>
                 <div class="text-sm text-gray-500">
-                    提示：每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。
+                    <span data-lang="blacklistTip">提示：每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。</span>
                 </div>
             </div>
 
             <!-- 支持的文件类型说明 -->
             <div class="bg-blue-50 p-6 rounded-lg">
-                <h4 class="text-lg font-medium text-blue-800 mb-3">支持的文件类型</h4>
+                <h4 class="text-lg font-medium text-blue-800 mb-3" data-lang="supportedFileTypes">支持的文件类型</h4>
                 <div class="grid md:grid-cols-2 gap-4 text-sm text-blue-700">
                     <div>
-                        <p class="font-medium mb-2">代码文件</p>
+                        <p class="font-medium mb-2" data-lang="codeFiles">代码文件</p>
                         <p>.js, .py, .java, .cpp, .h, .cs, .php, .rb, .swift, .go, .rs, .ts, .jsx, .tsx</p>
                     </div>
                     <div>
-                        <p class="font-medium mb-2">其他文件</p>
+                        <p class="font-medium mb-2" data-lang="otherFiles">其他文件</p>
                         <p>.json, .yaml, .yml, .xml, .toml, .ini, .conf, .txt, .log, .md, .csv</p>
                     </div>
                 </div>
             </div>
 
             <button onclick="processFiles()" 
-                class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg">
-                开始处理
+                class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg" data-lang="startProcessing">
+                <span data-lang="startProcessing">开始处理</span>
             </button>
         </div>
 
         <!-- 进度条 -->
         <div id="progress" class="bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">处理进度</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4" data-lang="processingProgress">处理进度</h3>
             <div class="w-full bg-gray-200 rounded-full h-3">
                 <div class="bg-blue-600 h-3 rounded-full transition-all duration-300 progress-pulse" id="progressBar" style="width: 0%"></div>
             </div>
@@ -176,24 +184,24 @@
 
         <!-- 统计信息 -->
         <div id="stats" class="bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
-            <h3 class="text-lg font-semibold text-gray-800 mb-6">统计信息</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-6" data-lang="statistics">统计信息</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
-                    <div class="text-sm font-medium text-blue-800">处理文件数</div>
+                    <div class="text-sm font-medium text-blue-800" data-lang="processedFiles">处理文件数</div>
                     <div id="totalFileCount" class="text-2xl font-bold text-blue-600">0</div>
                 </div>
                 <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
-                    <div class="text-sm font-medium text-green-800">总字符数</div>
+                    <div class="text-sm font-medium text-green-800" data-lang="totalChars">总字符数</div>
                     <div id="totalCharCount" class="text-2xl font-bold text-green-600">0</div>
                 </div>
                 <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg">
-                    <div class="text-sm font-medium text-yellow-800">跳过文件数</div>
+                    <div class="text-sm font-medium text-yellow-800" data-lang="skippedFiles">跳过文件数</div>
                     <div id="skippedFileCount" class="text-2xl font-bold text-yellow-600">0</div>
                 </div>
             </div>
             
             <div class="mt-6">
-                <h4 class="text-lg font-medium text-gray-700 mb-4">Token 统计</h4>
+                <h4 class="text-lg font-medium text-gray-700 mb-4" data-lang="tokenStats">Token 统计</h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
                         <div class="text-sm font-medium text-purple-800">GPT-3.5</div>
@@ -215,6 +223,107 @@
         <div id="status" class="bg-white rounded-lg shadow-lg p-6"></div>
     </div>
 <script>
+        // 添加语言配置
+        const TRANSLATIONS = {
+            zh: {
+                title: '代码文件内容提取与统计工具',
+                folderUpload: '文件夹上传',
+                folderUploadDesc: '选择整个文件夹进行分析',
+                fileUpload: '文件上传',
+                fileUploadDesc: '选择一个或多个文件',
+                selectedFiles: '已选择的文件',
+                codeProcessingOptions: '代码处理选项',
+                compressCode: '压缩代码',
+                compressCodeDesc: '删除多余空格、换行等，减少文件大小',
+                tokenCalcModel: 'Token计算模型',
+                blacklistSettings: '黑名单设置',
+                saveSettings: '保存设置',
+                blacklistDesc: '这些文件夹将被自动跳过处理：',
+                blacklistTip: '每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。',
+                supportedFileTypes: '支持的文件类型',
+                codeFiles: '代码文件',
+                otherFiles: '其他文件',
+                startProcessing: '开始处理',
+                processingProgress: '处理进度',
+                statistics: '统计信息',
+                processedFiles: '处理文件数',
+                totalChars: '总字符数',
+                skippedFiles: '跳过文件数',
+                tokenStats: 'Token 统计',
+                blacklistUpdated: '黑名单设置已更新',
+                pleaseSelectFiles: '请选择文件或文件夹！',
+                fileReadError: '文件读取失败',
+                totalFiles: '总文件数',
+                willBeSkipped: '将被跳过',
+                actualProcessing: '实际处理',
+                filePath: '文件路径',
+                chars: '字符',
+                fileProcessed: '文件处理完成',
+                fileSkipped: '文件已跳过',
+                processingFile: '正在处理文件'
+            },
+            en: {
+                title: 'Code File Content Extraction and Statistics Tool',
+                folderUpload: 'Folder Upload',
+                folderUploadDesc: 'Select an entire folder for analysis',
+                fileUpload: 'File Upload',
+                fileUploadDesc: 'Select one or multiple files',
+                selectedFiles: 'Selected Files',
+                codeProcessingOptions: 'Code Processing Options',
+                compressCode: 'Compress Code',
+                compressCodeDesc: 'Remove extra spaces and line breaks to reduce file size',
+                tokenCalcModel: 'Token Calculation Model',
+                blacklistSettings: 'Blacklist Settings',
+                saveSettings: 'Save Settings',
+                blacklistDesc: 'These folders will be automatically skipped:',
+                blacklistTip: 'Enter one folder name per line, files in these folders and their subfolders will be skipped.',
+                supportedFileTypes: 'Supported File Types',
+                codeFiles: 'Code Files',
+                otherFiles: 'Other Files',
+                startProcessing: 'Start Processing',
+                processingProgress: 'Processing Progress',
+                statistics: 'Statistics',
+                processedFiles: 'Processed Files',
+                totalChars: 'Total Characters',
+                skippedFiles: 'Skipped Files',
+                tokenStats: 'Token Statistics',
+                blacklistUpdated: 'Blacklist settings updated',
+                pleaseSelectFiles: 'Please select files or folders!',
+                fileReadError: 'File read error',
+                totalFiles: 'Total Files',
+                willBeSkipped: 'Will be Skipped',
+                actualProcessing: 'Actually Processing',
+                filePath: 'File Path',
+                chars: 'characters',
+                fileProcessed: 'File processed',
+                fileSkipped: 'File skipped',
+                processingFile: 'Processing file'
+            }
+        };
+
+        let currentLang = 'en';
+
+        // 语言切换函数
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langToggle').textContent = currentLang === 'zh' ? 'English' : '中文';
+            updatePageLanguage();
+        }
+
+        // 更新页面语言
+        function updatePageLanguage() {
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (TRANSLATIONS[currentLang][key]) {
+                    element.textContent = TRANSLATIONS[currentLang][key];
+                }
+            });
+        }
+
+        // 添加语言切换按钮事件监听
+        document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+
         // 修改黑名单配置相关代码
         let BLACKLIST_FOLDERS = [
             'node_modules',
@@ -399,7 +508,7 @@
             const allFiles = [...folderFiles, ...individualFiles];
             
             if (allFiles.length === 0) {
-                alert('请选择文件或文件夹！');
+                alert(TRANSLATIONS[currentLang].pleaseSelectFiles);
                 return;
             }
 
@@ -432,7 +541,7 @@
                             <div class="flex items-center space-x-2 text-sm mb-2">
                                 <span class="text-yellow-500">⚠</span>
                                 <span class="text-gray-700">${filePath}</span>
-                                <span class="text-yellow-500">跳过黑名单文件夹中的文件</span>
+                                <span class="text-yellow-500">${TRANSLATIONS[currentLang].willBeSkipped}</span>
                             </div>`;
                         updateProgress();
                         continue;
@@ -444,7 +553,7 @@
                             <div class="flex items-center space-x-2 text-sm mb-2">
                                 <span class="text-yellow-500">⚠</span>
                                 <span class="text-gray-700">${filePath}</span>
-                                <span class="text-yellow-500">跳过二进制或媒体文件</span>
+                                <span class="text-yellow-500">${TRANSLATIONS[currentLang].willBeSkipped}</span>
                             </div>`;
                         updateProgress();
                         continue;
@@ -465,8 +574,8 @@
                     totalGPT4Tokens += tokens.gpt4;
                     totalClaudeTokens += tokens.claude;
                     
-                    output += `=== 文件路径: ${filePath} ===\n`;
-                    output += `字符数: ${charCount}\n`;
+                    output += `=== ${TRANSLATIONS[currentLang].filePath}: ${filePath} ===\n`;
+                    output += `${TRANSLATIONS[currentLang].totalChars}: ${charCount}\n`;
                     output += `GPT-3.5 Tokens: ${tokens.gpt3}\n`;
                     output += `GPT-4 Tokens: ${tokens.gpt4}\n`;
                     output += `Claude Tokens: ${tokens.claude}\n\n`;
@@ -478,7 +587,7 @@
                             <span class="text-green-500">✓</span>
                             <span class="text-gray-700">${filePath}</span>
                             <span class="text-gray-500">
-                                (${charCount.toLocaleString()} 字符, 
+                                (${charCount.toLocaleString()} ${TRANSLATIONS[currentLang].chars}, 
                                 GPT3: ${tokens.gpt3.toLocaleString()}, 
                                 GPT4: ${tokens.gpt4.toLocaleString()}, 
                                 Claude: ${tokens.claude.toLocaleString()} tokens)
@@ -490,7 +599,7 @@
                         <div class="flex items-center space-x-2 text-sm mb-2">
                             <span class="text-red-500">✗</span>
                             <span class="text-gray-700">${file.webkitRelativePath || file.name}</span>
-                            <span class="text-red-500">${error}</span>
+                            <span class="text-red-500">${TRANSLATIONS[currentLang].fileReadError}</span>
                         </div>`;
                 }
                 
@@ -531,7 +640,9 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = '文件内容汇总_' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.txt';
+            // 修改下载文件名的语言
+            const fileName = currentLang === 'zh' ? '文件内容汇总_' : 'content_summary_';
+            a.download = fileName + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.txt';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -554,6 +665,9 @@
             
             // 更新选择的文件统计
             updateFileStats();
+            
+            // 初始化页面语言
+            updatePageLanguage();
         });
 
         // 保存黑名单设置
@@ -572,7 +686,7 @@
             status.innerHTML = `
                 <div class="flex items-center space-x-2 text-sm mb-2 bg-green-50 p-3 rounded">
                     <span class="text-green-500">✓</span>
-                    <span class="text-green-700">黑名单设置已更新</span>
+                    <span class="text-green-700">${TRANSLATIONS[currentLang].blacklistUpdated}</span>
                 </div>
             `;
         }
@@ -589,9 +703,9 @@
                 const statsDiv = document.createElement('div');
                 statsDiv.className = 'text-sm text-gray-600 mt-2';
                 statsDiv.innerHTML = `
-                    总文件数：${totalCount} | 
-                    将被跳过：${blacklistedCount} |
-                    实际处理：${totalCount - blacklistedCount}
+                    ${TRANSLATIONS[currentLang].totalFiles}：${totalCount} | 
+                    ${TRANSLATIONS[currentLang].willBeSkipped}：${blacklistedCount} |
+                    ${TRANSLATIONS[currentLang].actualProcessing}：${totalCount - blacklistedCount}
                 `;
                 
                 const uploadArea = folderInput.closest('.upload-area');
