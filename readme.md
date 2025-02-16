@@ -1,4 +1,11 @@
 # 代码文件内容提取与统计工具
+# Code File Content Extraction and Statistics Tool
+
+[中文](#代码文件内容提取与统计工具) | [English](#code-file-content-extraction-and-statistics-tool-1)
+
+---
+
+# 代码文件内容提取与统计工具
 
 一个用于提取和统计代码文件内容的Web工具，特别适合准备用于大语言模型（如GPT、Claude）的代码分析。
 
@@ -98,5 +105,110 @@
 欢迎提交Issue和Pull Request来改进这个工具。
 
 ## 许可证
+
+MIT License
+
+---
+
+# Code File Content Extraction and Statistics Tool
+
+A web-based tool for extracting and analyzing code file contents, particularly suitable for preparing code analysis for Large Language Models (like GPT, Claude).
+
+## Features
+
+- 📁 Support for folder and single file uploads
+- 🔍 Automatic binary file detection and filtering
+- 📊 Detailed statistics
+  - Character count
+  - Token calculation for various models (GPT-3.5, GPT-4, Claude)
+- ⚡ Code compression functionality
+- 🚫 Smart folder filtering system
+- 📥 Automatic summary text file generation
+
+## Supported File Types
+
+### Code Files
+- JavaScript (.js)
+- Python (.py)
+- Java (.java)
+- C++ (.cpp, .h)
+- C# (.cs)
+- PHP (.php)
+- Ruby (.rb)
+- Swift (.swift)
+- Go (.go)
+- Rust (.rs)
+- TypeScript (.ts)
+- JSX/TSX (.jsx, .tsx)
+
+### Configuration and Text Files
+- JSON (.json)
+- YAML (.yaml, .yml)
+- XML (.xml)
+- TOML (.toml)
+- INI (.ini)
+- Configuration files (.conf)
+- Text files (.txt)
+- Log files (.log)
+- Markdown (.md)
+- CSV (.csv)
+
+## How to Use
+
+1. **File Selection**
+   - Click "Upload Folder" to select an entire project folder
+   - Or click "Upload File" to select single or multiple files
+
+2. **Blacklist Settings**
+   - View and edit folders to exclude
+   - Common dependency folders (like node_modules) are excluded by default
+   - Customize additional folders to exclude
+
+3. **Processing Options**
+   - Choose whether to compress code (remove excess whitespace)
+   - Select target model (affects token calculation)
+
+4. **Start Processing**
+   - Click "Start Processing" button
+   - Wait for processing to complete
+   - Summary file downloads automatically
+
+## Statistics
+
+The tool provides the following statistics:
+- Total files processed
+- Number of files skipped
+- Total character count
+- Estimated token count for various models
+  - GPT-3.5
+  - GPT-4
+  - Claude
+
+## Local Deployment
+
+1. Download project files
+2. Open `index.html` directly in your browser
+3. No additional dependencies needed, all required libraries are loaded via CDN
+
+## Notes
+
+- All processing is done locally in the browser, no files are uploaded to servers
+- Large folders may take some time to process, please be patient
+- Recommended to use modern browsers (Chrome, Firefox, Edge, etc.) for best experience
+- Some files may not be read correctly due to encoding issues
+
+## Tech Stack
+
+- HTML5
+- Tailwind CSS
+- JavaScript
+- GPT-3 Tokenizer
+- js-beautify
+
+## Contributing
+
+Issues and Pull Requests are welcome to improve this tool.
+
+## License
 
 MIT License
