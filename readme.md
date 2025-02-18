@@ -28,6 +28,8 @@
 - 🚫 智能文件夹过滤系统
 - 📥 自动生成汇总文本文件
 
+🌐 [在线演示](http://codemerge.131.996h.cn/)
+
 ## 支持的文件类型
 
 ### 代码文件
@@ -140,6 +142,8 @@ A web-based tool for extracting and analyzing code file contents, particularly s
 - ⚡ Code compression functionality
 - 🚫 Smart folder filtering system
 - 📥 Automatic summary text file generation
+
+🌐 [Online Demo](http://codemerge.131.996h.cn/)
 
 ## Supported File Types
 
