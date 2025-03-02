@@ -219,6 +219,29 @@
             </div>
         </div>
 
+        <!-- 添加复制框和下载按钮 -->
+        <div id="resultActions" class="bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4" data-lang="resultActions">处理结果</h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-medium text-gray-700" data-lang="copyContent">合并内容</label>
+                        <button id="copyBtn" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm transition-colors" data-lang="copyBtn">复制</button>
+                    </div>
+                    <textarea id="copyArea" rows="6" class="w-full p-3 border rounded-lg text-sm font-mono bg-gray-50" readonly></textarea>
+                    <div id="copyStatus" class="text-sm text-green-600 mt-1 hidden" data-lang="copySuccess">已复制到剪贴板！</div>
+                </div>
+                <div class="flex justify-center">
+                    <button id="downloadBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <span data-lang="downloadBtn">下载合并内容</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- 状态信息 -->
         <div id="status" class="bg-white rounded-lg shadow-lg p-6"></div>
     </div>
@@ -260,7 +283,12 @@
                 chars: '字符',
                 fileProcessed: '文件处理完成',
                 fileSkipped: '文件已跳过',
-                processingFile: '正在处理文件'
+                processingFile: '正在处理文件',
+                resultActions: '处理结果',
+                copyContent: '合并内容',
+                copyBtn: '复制',
+                copySuccess: '已复制到剪贴板！',
+                downloadBtn: '下载合并内容'
             },
             en: {
                 title: 'Code File Content Extraction and Statistics Tool',
@@ -297,7 +325,12 @@
                 chars: 'characters',
                 fileProcessed: 'File processed',
                 fileSkipped: 'File skipped',
-                processingFile: 'Processing file'
+                processingFile: 'Processing file',
+                resultActions: 'Processing Results',
+                copyContent: 'Merged Content',
+                copyBtn: 'Copy',
+                copySuccess: 'Copied to clipboard!',
+                downloadBtn: 'Download Merged Content'
             }
         };
 
@@ -354,6 +387,9 @@
         let totalGPT3Tokens = 0;
         let totalGPT4Tokens = 0;
         let totalClaudeTokens = 0;
+
+        // 存储合并后的内容
+        let mergedContent = '';
 
         // 初始化文件选择监听器
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -527,6 +563,7 @@
             
             document.getElementById('progress').classList.remove('hidden');
             document.getElementById('stats').classList.remove('hidden');
+            document.getElementById('resultActions').classList.remove('hidden');
 
             const shouldCompress = document.getElementById('compressCode').checked;
 
@@ -615,7 +652,12 @@
             document.getElementById('claudeTokenCount').textContent = totalClaudeTokens.toLocaleString();
 
             if (totalChars > 0) {
-                downloadOutput(output);
+                // 保存合并内容并更新复制框
+                mergedContent = output;
+                document.getElementById('copyArea').value = output;
+                
+                // 不再自动下载，而是让用户选择
+                // downloadOutput(output);
             }
         }
 
@@ -668,6 +710,27 @@
             
             // 初始化页面语言
             updatePageLanguage();
+            
+            // 初始化复制按钮事件
+            document.getElementById('copyBtn').addEventListener('click', function() {
+                const copyArea = document.getElementById('copyArea');
+                copyArea.select();
+                document.execCommand('copy');
+                
+                // 显示复制成功提示
+                const copyStatus = document.getElementById('copyStatus');
+                copyStatus.classList.remove('hidden');
+                setTimeout(() => {
+                    copyStatus.classList.add('hidden');
+                }, 2000);
+            });
+            
+            // 初始化下载按钮事件
+            document.getElementById('downloadBtn').addEventListener('click', function() {
+                if (mergedContent) {
+                    downloadOutput(mergedContent);
+                }
+            });
         });
 
         // 保存黑名单设置
