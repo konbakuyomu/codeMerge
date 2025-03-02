@@ -3,61 +3,13 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>代码文件内容提取与统计工具</title>
+    <title>Code File Content Extraction and Statistics Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gpt-3-encoder/dist/gpt-3-encoder.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js"></script>
-    <style>
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 300px;
-            background-color: #555;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-        .file-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .upload-area {
-            border: 2px dashed #CBD5E0;
-            transition: all 0.3s ease;
-        }
-        .upload-area:hover {
-            border-color: #4299E1;
-            background-color: #EBF8FF;
-        }
-        .progress-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: .5;
-            }
-        }
-    </style>
+    ${index.html的完整内容}
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
