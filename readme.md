@@ -27,6 +27,10 @@
 - ⚡ 代码压缩功能
 - 🚫 智能文件夹过滤系统
 - 📥 自动生成汇总文本文件
+- 🌲 自动生成文件夹树状结构视图（新增功能）
+  - 直观展示项目文件组织
+  - 支持复制树状结构
+  - 自动过滤黑名单中的文件和文件夹
 
 🌐 [在线演示](http://codemerge.131.996h.cn/)
 
@@ -142,6 +146,10 @@ A web-based tool for extracting and analyzing code file contents, particularly s
 - ⚡ Code compression functionality
 - 🚫 Smart folder filtering system
 - 📥 Automatic summary text file generation
+- 🌲 Folder tree structure visualization (New Feature)
+  - Intuitive project file organization display
+  - Copy tree structure functionality
+  - Automatic filtering of blacklisted files and folders
 
 🌐 [Online Demo](http://codemerge.131.996h.cn/)
 
