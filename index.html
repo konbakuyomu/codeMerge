@@ -69,6 +69,70 @@
                 console.error('Failed to load tokenizer:', error);
             }
         });
+
+        // 从.gitignore读取忽略规则
+        async function readGitignoreFile(directoryEntry) {
+            return new Promise((resolve, reject) => {
+                if (!directoryEntry || !directoryEntry.createReader) {
+                    resolve('');
+                    return;
+                }
+                directoryEntry.getFile('.gitignore', {}, 
+                    fileEntry => {
+                        fileEntry.file(file => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve(e.target.result);
+                            reader.onerror = e => reject(e);
+                            reader.readAsText(file);
+                        });
+                    },
+                    error => resolve('') // 如果没有.gitignore文件，返回空字符串
+                );
+            });
+        }
+
+        // 解析.gitignore内容为过滤规则
+        function parseGitignoreRules(gitignoreContent) {
+            if (!gitignoreContent) return [];
+            
+            // 按行分割
+            const lines = gitignoreContent.split(/\r?\n/);
+            
+            // 过滤掉空行和注释
+            return lines
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('#'))
+                .map(rule => {
+                    // 处理规则，移除开头的!（取反规则暂不处理）
+                    if (rule.startsWith('!')) return null; // 暂不处理取反规则
+                    
+                    // 删除开头的/，它表示根目录匹配
+                    let processedRule = rule.startsWith('/') ? rule.substring(1) : rule;
+                    
+                    // 处理目录指示符（尾部的/）
+                    if (processedRule.endsWith('/')) {
+                        processedRule = processedRule.slice(0, -1);
+                    }
+                    
+                    return processedRule;
+                })
+                .filter(Boolean); // 过滤掉null值
+        }
+
+        // 检查文件是否应该根据.gitignore规则被排除
+        function shouldExcludeByGitignoreRules(filePath, gitignoreRules) {
+            return gitignoreRules.some(rule => {
+                // 简单的通配符转换为正则表达式
+                let regexRule = rule
+                    .replace(/\./g, '\\.')      // 转义点
+                    .replace(/\*\*/g, '.*')     // **匹配任意字符
+                    .replace(/\*/g, '[^/]*')    // *匹配单层目录内的任意字符
+                    .replace(/\?/g, '[^/]');    // ?匹配单个字符
+                
+                const regex = new RegExp(`(^|/)${regexRule}(/|$)`);
+                return regex.test(filePath);
+            });
+        }
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -102,6 +166,22 @@
                 </div>
             </div>
 
+            <!-- 添加gitignore上传区域 -->
+            <div class="grid md:grid-cols-1 gap-4">
+                <div class="upload-area rounded-lg p-4 text-center">
+                    <label class="block text-lg font-medium text-gray-700 mb-2" data-lang="gitignoreUpload">.gitignore上传</label>
+                    <div class="flex items-center">
+                        <input type="file" id="gitignoreInput" accept=".gitignore,*"
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                        <button onclick="processGitignoreFile()" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm ml-2">
+                            <span data-lang="applyGitignore">应用</span>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2" data-lang="gitignoreUploadDesc">上传.gitignore文件，自动应用到黑名单设置</p>
+                </div>
+            </div>
+
             <!-- 选中文件列表 -->
             <div id="selectedFiles" class="file-list mt-6 border rounded-lg p-4 hidden bg-gray-50">
                 <h3 class="text-lg font-medium text-gray-700 mb-3" data-lang="selectedFiles">已选择的文件</h3>
@@ -114,11 +194,49 @@
             <div class="grid md:grid-cols-1 gap-6 p-4 bg-gray-50 rounded-lg">
                 <div class="space-y-4">
                     <h3 class="text-lg font-medium text-gray-700" data-lang="codeProcessingOptions">代码处理选项</h3>
+                    
+                    <!-- 处理模式选择 -->
+                    <div class="mb-4">
+                        <p class="text-sm font-medium text-gray-700 mb-2" data-lang="processingMode">处理模式：</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
+                                <input type="radio" name="processingMode" id="modeFullProcess" value="full" class="w-5 h-5 text-blue-600" checked>
+                                <div>
+                                    <span class="text-gray-700 font-medium" data-lang="modeFullProcess">完整处理</span>
+                                    <p class="text-sm text-gray-500 mt-1" data-lang="modeFullProcessDesc">提取文件树和合并文件内容</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
+                                <input type="radio" name="processingMode" id="modeTreeOnly" value="treeOnly" class="w-5 h-5 text-blue-600">
+                                <div>
+                                    <span class="text-gray-700 font-medium" data-lang="modeTreeOnly">仅文件树</span>
+                                    <p class="text-sm text-gray-500 mt-1" data-lang="modeTreeOnlyDesc">只提取文件树结构，不处理文件内容</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
                     <label class="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
                         <input type="checkbox" id="compressCode" class="w-5 h-5 rounded text-blue-600">
                         <div>
                             <span class="text-gray-700 font-medium" data-lang="compressCode">压缩代码</span>
                             <p class="text-sm text-gray-500 mt-1" data-lang="compressCodeDesc">删除多余空格、换行等，减少文件大小</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
+                        <input type="checkbox" id="useGitignore" class="w-5 h-5 rounded text-blue-600" checked>
+                        <div>
+                            <span class="text-gray-700 font-medium" data-lang="useGitignore">使用.gitignore</span>
+                            <p class="text-sm text-gray-500 mt-1" data-lang="useGitignoreDesc">从项目中的.gitignore文件读取忽略规则</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
+                        <input type="checkbox" id="ignoreGit" class="w-5 h-5 rounded text-blue-600" checked>
+                        <div>
+                            <span class="text-gray-700 font-medium" data-lang="ignoreGit">忽略.git文件夹</span>
+                            <p class="text-sm text-gray-500 mt-1" data-lang="ignoreGitDesc">跳过.git文件夹及其中的版本控制文件</p>
                         </div>
                     </label>
                 </div>
@@ -305,7 +423,26 @@
                 copyAreaPlaceholder: '处理完成后的内容将显示在这里...',
                 description: '这是一个帮助你分析代码文件的工具。可以统计字符数、计算不同模型的Token数量，并支持导出合并后的内容。适用于需要估算API调用成本或批量处理代码文件的场景。',
                 folderStructure: '文件夹结构',
-                structureAreaHint: '文件夹树状结构'
+                structureAreaHint: '文件夹树状结构',
+                processingMode: '处理模式',
+                modeFullProcess: '完整处理',
+                modeFullProcessDesc: '提取文件树和合并文件内容',
+                modeTreeOnly: '仅文件树',
+                modeTreeOnlyDesc: '只提取文件树结构，不处理文件内容',
+                useGitignore: '使用.gitignore',
+                useGitignoreDesc: '从项目中的.gitignore文件读取忽略规则',
+                gitignoreRulesFound: '从.gitignore中读取了{0}条规则',
+                gitignoreNotFound: '未找到.gitignore文件',
+                useGitignoreSuccess: '成功应用.gitignore规则',
+                gitignoreUpload: '.gitignore上传',
+                gitignoreUploadDesc: '上传.gitignore文件，自动应用到黑名单设置',
+                applyGitignore: '应用',
+                gitignoreApplied: '.gitignore规则已应用，已添加{0}条规则到黑名单',
+                noGitignoreSelected: '请先选择.gitignore文件',
+                scanningForGitignore: '正在扫描.gitignore文件...',
+                gitignoreFoundAuto: '自动检测到.gitignore文件，已应用{0}条规则',
+                ignoreGit: '忽略.git文件夹',
+                ignoreGitDesc: '跳过.git文件夹及其中的版本控制文件',
             },
             en: {
                 title: 'Code File Content Extraction and Statistics Tool',
@@ -352,7 +489,26 @@
                 copyAreaPlaceholder: 'Processed content will be displayed here...',
                 description: 'This tool helps you analyze code files by counting characters, calculating tokens for different models, and exporting merged content. Perfect for estimating API costs or batch processing code files.',
                 folderStructure: 'Folder Structure',
-                structureAreaHint: 'Folder tree structure'
+                structureAreaHint: 'Folder tree structure',
+                processingMode: 'Processing Mode',
+                modeFullProcess: 'Full Processing',
+                modeFullProcessDesc: 'Extract file tree and merge file contents',
+                modeTreeOnly: 'Tree Only',
+                modeTreeOnlyDesc: 'Only extract file tree structure, don\'t process file contents',
+                useGitignore: 'Use .gitignore',
+                useGitignoreDesc: 'Read ignore rules from .gitignore file in the project',
+                gitignoreRulesFound: 'Read {0} rules from .gitignore',
+                gitignoreNotFound: '.gitignore file not found',
+                useGitignoreSuccess: 'Successfully applied .gitignore rules',
+                gitignoreUpload: '.gitignore Upload',
+                gitignoreUploadDesc: 'Upload a .gitignore file to automatically apply to blacklist settings',
+                applyGitignore: 'Apply',
+                gitignoreApplied: '.gitignore rules applied, {0} rules added to blacklist',
+                noGitignoreSelected: 'Please select a .gitignore file first',
+                scanningForGitignore: 'Scanning for .gitignore file...',
+                gitignoreFoundAuto: 'Automatically detected .gitignore file, {0} rules applied',
+                ignoreGit: 'Ignore .git Folder',
+                ignoreGitDesc: 'Skip .git folder and version control files',
             }
         };
 
@@ -408,6 +564,9 @@
             'tmp',
             'temp'
         ];
+
+        // 保存用户默认黑名单（不包含可选的.git）
+        let DEFAULT_BLACKLIST_FOLDERS = BLACKLIST_FOLDERS.filter(folder => folder !== '.git');
 
         // 存储选择的文件
         let selectedFiles = new Map();
@@ -589,10 +748,44 @@
 
         // 修改文件处理函数
         async function processFiles() {
-            const folderFiles = Array.from(document.getElementById('folderInput').files)
-                .filter(file => !isInBlacklist(file.webkitRelativePath));
+            const folderInput = document.getElementById('folderInput');
+            const folderFiles = Array.from(folderInput.files);
             const individualFiles = Array.from(selectedFiles.values());
-            const allFiles = [...folderFiles, ...individualFiles];
+            
+            // 获取处理模式和选项
+            const isTreeOnlyMode = document.getElementById('modeTreeOnly').checked;
+            const shouldUseGitignore = document.getElementById('useGitignore').checked;
+            const shouldIgnoreGit = document.getElementById('ignoreGit').checked;
+            
+            // 更新黑名单（确保最新设置被应用）
+            const blacklistInput = document.getElementById('blacklistInput');
+            // 获取用户自定义的黑名单内容
+            const userBlacklist = blacklistInput.value
+                .split('\n')
+                .map(item => item.trim())
+                .filter(item => item !== '' && item !== '.git'); // 排除.git，由选项控制
+            
+            // 根据ignoreGit选项确定最终的黑名单
+            BLACKLIST_FOLDERS = shouldIgnoreGit 
+                ? [...userBlacklist, '.git'] 
+                : [...userBlacklist];
+            
+            // 更新文本框以反映当前设置
+            blacklistInput.value = BLACKLIST_FOLDERS.join('\n');
+            
+            // 过滤掉黑名单文件
+            const filteredFolderFiles = folderFiles.filter(file => {
+                const filePath = file.webkitRelativePath;
+                
+                // 检查是否在黑名单中
+                if (isInBlacklist(filePath)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            const allFiles = [...filteredFolderFiles, ...individualFiles];
             
             if (allFiles.length === 0) {
                 alert(TRANSLATIONS[currentLang].pleaseSelectFiles);
@@ -610,30 +803,44 @@
             
             let output = '';
             const status = document.getElementById('status');
-            status.innerHTML = '';
+            // 保留黑名单更新的消息，不清空状态区域
+            // status.innerHTML = '';
             
             document.getElementById('progress').classList.remove('hidden');
-            document.getElementById('stats').classList.remove('hidden');
-            document.getElementById('resultActions').classList.remove('hidden');
+            
+            // 如果是仅文件树模式，隐藏统计信息和合并内容区域
+            if (isTreeOnlyMode) {
+                document.getElementById('stats').classList.add('hidden');
+                document.getElementById('resultActions').classList.add('hidden');
+            } else {
+                document.getElementById('stats').classList.remove('hidden');
+                document.getElementById('resultActions').classList.remove('hidden');
+            }
 
             const shouldCompress = document.getElementById('compressCode').checked;
 
+            // 如果只需要处理文件树
+            if (isTreeOnlyMode) {
+                // 直接生成文件树，不处理文件内容
+                if (folderFiles.length > 0) {
+                    generateFolderStructure(filteredFolderFiles);
+                    document.getElementById('folderStructure').classList.remove('hidden');
+                } else {
+                    document.getElementById('folderStructure').classList.add('hidden');
+                }
+                
+                // 更新进度
+                processedFiles = totalFiles;
+                updateProgress();
+                return;
+            }
+
+            // 完整处理模式
             for (const file of allFiles) {
                 try {
                     const filePath = file.webkitRelativePath || file.name;
                     
-                    // 检查是否在黑名单中
-                    if (isInBlacklist(filePath)) {
-                        skippedFiles++;
-                        status.innerHTML += `
-                            <div class="flex items-center space-x-2 text-sm mb-2">
-                                <span class="text-yellow-500">⚠</span>
-                                <span class="text-gray-700">${filePath}</span>
-                                <span class="text-yellow-500">${TRANSLATIONS[currentLang].willBeSkipped}</span>
-                            </div>`;
-                        updateProgress();
-                        continue;
-                    }
+                    // 文件过滤逻辑已经在筛选阶段处理，不需要重复检查黑名单
 
                     if (!isProcessableFile(file)) {
                         skippedFiles++;
@@ -706,14 +913,11 @@
                 // 保存合并内容并更新复制框
                 mergedContent = output;
                 document.getElementById('copyArea').value = output;
-                
-                // 不再自动下载，而是让用户选择
-                // downloadOutput(output);
             }
 
             // 生成文件夹结构
             if (folderFiles.length > 0) {
-                generateFolderStructure(folderFiles);
+                generateFolderStructure(filteredFolderFiles);
                 document.getElementById('folderStructure').classList.remove('hidden');
             } else {
                 document.getElementById('folderStructure').classList.add('hidden');
@@ -807,6 +1011,11 @@
                 setTimeout(() => {
                     structureCopyStatus.classList.add('hidden');
                 }, 2000);
+            });
+            
+            // 添加忽略git选项变更事件
+            document.getElementById('ignoreGit').addEventListener('change', function() {
+                updateBlacklistForGit(this.checked);
             });
         });
 
@@ -922,6 +1131,156 @@
             }
             
             return result;
+        }
+
+        // 处理单独上传的.gitignore文件
+        async function processGitignoreFile() {
+            const gitignoreInput = document.getElementById('gitignoreInput');
+            
+            if (gitignoreInput.files.length === 0) {
+                alert(TRANSLATIONS[currentLang].noGitignoreSelected);
+                return;
+            }
+            
+            const gitignoreFile = gitignoreInput.files[0];
+            
+            try {
+                // 读取文件内容
+                const content = await readFile(gitignoreFile);
+                
+                // 解析规则
+                const rules = parseGitignoreRules(content);
+                
+                if (rules.length > 0) {
+                    // 更新黑名单
+                    const blacklistInput = document.getElementById('blacklistInput');
+                    const currentBlacklist = blacklistInput.value
+                        .split('\n')
+                        .map(item => item.trim())
+                        .filter(item => item !== '');
+                    
+                    // 将新规则添加到黑名单中
+                    const updatedBlacklist = [...new Set([...currentBlacklist, ...rules])];
+                    
+                    // 更新黑名单输入框
+                    blacklistInput.value = updatedBlacklist.join('\n');
+                    
+                    // 保存黑名单
+                    saveBlacklist();
+                    
+                    // 显示成功信息
+                    const status = document.getElementById('status');
+                    status.innerHTML = `
+                        <div class="flex items-center space-x-2 text-sm mb-2 bg-green-50 p-3 rounded">
+                            <span class="text-green-500">✓</span>
+                            <span class="text-green-700">${TRANSLATIONS[currentLang].gitignoreApplied.replace('{0}', rules.length)}</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error processing .gitignore file:', error);
+            }
+        }
+
+        // 修改文件夹输入事件，添加.gitignore自动检测
+        document.getElementById('folderInput').addEventListener('change', async function(e) {
+            // 更新文件统计
+            updateFileStats();
+            
+            // 检查是否应该自动处理.gitignore
+            if (document.getElementById('useGitignore').checked) {
+                await checkForGitignoreInRoot(e.target.files);
+            }
+        });
+
+        // 检查根目录是否有.gitignore文件
+        async function checkForGitignoreInRoot(files) {
+            const status = document.getElementById('status');
+            status.innerHTML = `
+                <div class="flex items-center space-x-2 text-sm mb-2 bg-blue-50 p-3 rounded">
+                    <span class="text-blue-500">ℹ</span>
+                    <span class="text-blue-700">${TRANSLATIONS[currentLang].scanningForGitignore}</span>
+                </div>
+            `;
+            
+            // 尝试在根目录找.gitignore文件
+            if (files && files.length > 0) {
+                const rootPath = files[0].webkitRelativePath.split('/')[0];
+                
+                for (const file of files) {
+                    const path = file.webkitRelativePath;
+                    const pathParts = path.split('/');
+                    
+                    // 查找第一级的.gitignore
+                    if (pathParts.length === 2 && pathParts[1].toLowerCase() === '.gitignore') {
+                        try {
+                            // 读取文件内容
+                            const content = await readFile(file);
+                            
+                            // 解析规则
+                            const rules = parseGitignoreRules(content);
+                            
+                            if (rules.length > 0) {
+                                // 更新黑名单
+                                const blacklistInput = document.getElementById('blacklistInput');
+                                const currentBlacklist = blacklistInput.value
+                                    .split('\n')
+                                    .map(item => item.trim())
+                                    .filter(item => item !== '');
+                                
+                                // 将新规则添加到黑名单中
+                                const updatedBlacklist = [...new Set([...currentBlacklist, ...rules])];
+                                
+                                // 更新黑名单输入框
+                                blacklistInput.value = updatedBlacklist.join('\n');
+                                
+                                // 保存黑名单
+                                saveBlacklist();
+                                
+                                // 显示成功信息
+                                status.innerHTML = `
+                                    <div class="flex items-center space-x-2 text-sm mb-2 bg-green-50 p-3 rounded">
+                                        <span class="text-green-500">✓</span>
+                                        <span class="text-green-700">${TRANSLATIONS[currentLang].gitignoreFoundAuto.replace('{0}', rules.length)}</span>
+                                    </div>
+                                `;
+                                
+                                // 找到并处理后返回
+                                return true;
+                            }
+                        } catch (error) {
+                            console.error('Error processing .gitignore file:', error);
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        // 更新黑名单中的.git设置
+        function updateBlacklistForGit(ignoreGit) {
+            const blacklistInput = document.getElementById('blacklistInput');
+            
+            // 获取当前黑名单内容，排除.git项
+            const currentBlacklist = blacklistInput.value
+                .split('\n')
+                .map(item => item.trim())
+                .filter(item => item !== '' && item !== '.git');
+            
+            // 根据选项决定是否添加.git
+            if (ignoreGit) {
+                currentBlacklist.push('.git');
+            }
+            
+            // 更新文本框内容
+            blacklistInput.value = currentBlacklist.join('\n');
+            
+            // 保存设置
+            saveBlacklist();
+            
+            // 更新文件统计
+            updateFileStats();
         }
     </script>
 </body>

@@ -26,11 +26,19 @@
   - 多种模型的Token计算（GPT-3.5、GPT-4、Claude）
 - ⚡ 代码压缩功能
 - 🚫 智能文件夹过滤系统
+  - 支持从.gitignore文件自动读取忽略规则
+    - 自动检测项目根目录的.gitignore文件
+    - 支持单独上传.gitignore文件直接应用
+  - 专门选项控制是否忽略.git文件夹
+  - 自定义黑名单文件夹设置
 - 📥 自动生成汇总文本文件
-- 🌲 自动生成文件夹树状结构视图（新增功能）
+- 🌲 自动生成文件夹树状结构视图
   - 直观展示项目文件组织
   - 支持复制树状结构
   - 自动过滤黑名单中的文件和文件夹
+- 🔄 灵活处理模式
+  - 完整处理模式：提取文件树和合并文件内容
+  - 仅文件树模式：只生成项目结构，不处理文件内容
 
 🌐 [在线演示](http://codemerge.131.996h.cn/)
 
@@ -68,19 +76,24 @@
    - 点击"文件夹上传"选择整个项目文件夹
    - 或点击"文件上传"选择单个或多个文件
 
-2. **黑名单设置**
-   - 查看和编辑需要排除的文件夹
-   - 默认排除常见的依赖文件夹（如 node_modules）
-   - 可自定义添加需要排除的文件夹
+2. **.gitignore处理**
+   - 选择文件夹后，系统会自动检测根目录中的.gitignore文件
+   - 或者可以单独上传.gitignore文件并点击"应用"
+   - .gitignore规则会自动添加到黑名单设置中
 
-3. **处理选项**
+3. **处理选项设置**
+   - 选择处理模式：完整处理或仅生成文件树
+   - 选择是否使用.gitignore文件中的规则
+   - 选择是否忽略.git文件夹
+   - 自定义黑名单文件夹
+
+4. **代码处理选项**
    - 选择是否压缩代码（删除多余空白）
-   - 选择目标模型（影响Token计算方式）
 
-4. **开始处理**
+5. **开始处理**
    - 点击"开始处理"按钮
    - 等待处理完成
-   - 自动下载汇总文件
+   - 根据选择的模式查看文件树或合并内容
 
 ## 统计信息
 
@@ -145,11 +158,19 @@ A web-based tool for extracting and analyzing code file contents, particularly s
   - Token calculation for various models (GPT-3.5, GPT-4, Claude)
 - ⚡ Code compression functionality
 - 🚫 Smart folder filtering system
+  - Support for automatically reading rules from .gitignore files
+    - Auto-detection of .gitignore in project root directory
+    - Support for uploading standalone .gitignore files
+  - Dedicated option to control ignoring .git folder
+  - Custom blacklist folder settings
 - 📥 Automatic summary text file generation
-- 🌲 Folder tree structure visualization (New Feature)
+- 🌲 Folder tree structure visualization
   - Intuitive project file organization display
   - Copy tree structure functionality
   - Automatic filtering of blacklisted files and folders
+- 🔄 Flexible processing modes
+  - Full processing: Extract file tree and merge file contents
+  - Tree-only mode: Only generate project structure without processing file contents
 
 🌐 [Online Demo](http://codemerge.131.996h.cn/)
 
@@ -187,19 +208,24 @@ A web-based tool for extracting and analyzing code file contents, particularly s
    - Click "Upload Folder" to select an entire project folder
    - Or click "Upload File" to select single or multiple files
 
-2. **Blacklist Settings**
-   - View and edit folders to exclude
-   - Common dependency folders (like node_modules) are excluded by default
-   - Customize additional folders to exclude
+2. **.gitignore Processing**
+   - After selecting a folder, the system will automatically detect .gitignore in the root directory
+   - Or you can upload a .gitignore file separately and click "Apply"
+   - .gitignore rules will be automatically added to blacklist settings
 
-3. **Processing Options**
+3. **Processing Options Setup**
+   - Choose processing mode: Full processing or Tree-only
+   - Choose whether to use rules from .gitignore file
+   - Choose whether to ignore .git folder
+   - Customize blacklist folders
+
+4. **Code Processing Options**
    - Choose whether to compress code (remove excess whitespace)
-   - Select target model (affects token calculation)
 
-4. **Start Processing**
+5. **Start Processing**
    - Click "Start Processing" button
    - Wait for processing to complete
-   - Summary file downloads automatically
+   - View file tree or merged content based on selected mode
 
 ## Statistics
 
