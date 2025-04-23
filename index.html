@@ -246,19 +246,38 @@
             <div class="p-4 bg-gray-50 rounded-lg">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-gray-700" data-lang="blacklistSettings">黑名单设置</h3>
-                    <button onclick="saveBlacklist()" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-                        <span data-lang="saveSettings">保存设置</span>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <span id="saveStatus" class="text-sm text-green-600 hidden transition-opacity duration-500">
+                            <span class="text-green-500">✓</span>
+                            <span data-lang="blacklistUpdated">黑名单设置已更新</span>
+                        </span>
+                        <button onclick="saveBlacklist()" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                            <span data-lang="saveSettings">保存设置</span>
+                        </button>
+                    </div>
                 </div>
+                
+                <!-- 文件夹黑名单 -->
                 <div class="mb-4">
-                    <p class="text-sm text-gray-600 mb-2" data-lang="blacklistDesc">这些文件夹将被自动跳过处理：</p>
-                    <textarea id="blacklistInput" rows="6" 
+                    <p class="text-sm text-gray-600 mb-2" data-lang="blacklistFoldersDesc">这些文件夹将被自动跳过处理：</p>
+                    <textarea id="blacklistInput" rows="4" 
                         class="w-full p-3 border rounded-lg text-sm font-mono"
                         placeholder="每行输入一个文件夹名称"></textarea>
+                    <div class="text-sm text-gray-500 mt-1">
+                        <span data-lang="blacklistFolderTip">提示：每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。</span>
+                    </div>
                 </div>
-                <div class="text-sm text-gray-500">
-                    <span data-lang="blacklistTip">提示：每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。</span>
+                
+                <!-- 文件扩展名黑名单 -->
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-2" data-lang="blacklistExtDesc">这些扩展名的文件将被自动跳过处理：</p>
+                    <textarea id="blacklistExtInput" rows="4" 
+                        class="w-full p-3 border rounded-lg text-sm font-mono"
+                        placeholder=".jpg\n.png\n.mp4"></textarea>
+                    <div class="text-sm text-gray-500 mt-1">
+                        <span data-lang="blacklistExtTip">提示：每行输入一个文件扩展名（如 .jpg 或 jpg），这些扩展名的文件将被跳过。</span>
+                    </div>
                 </div>
             </div>
 
@@ -391,8 +410,10 @@
                 tokenCalcModel: 'Token计算模型',
                 blacklistSettings: '黑名单设置',
                 saveSettings: '保存设置',
-                blacklistDesc: '这些文件夹将被自动跳过处理：',
-                blacklistTip: '每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。',
+                blacklistFoldersDesc: '这些文件夹将被自动跳过处理：',
+                blacklistFoldersTip: '提示：每行输入一个文件夹名称，这些文件夹及其子文件夹中的文件将被跳过。',
+                blacklistExtDesc: '这些扩展名的文件将被自动跳过处理：',
+                blacklistExtTip: '提示：每行输入一个文件扩展名（如 .jpg 或 jpg），这些扩展名的文件将被跳过。',
                 supportedFileTypes: '支持的文件类型',
                 codeFiles: '代码文件',
                 otherFiles: '其他文件',
@@ -457,8 +478,10 @@
                 tokenCalcModel: 'Token Calculation Model',
                 blacklistSettings: 'Blacklist Settings',
                 saveSettings: 'Save Settings',
-                blacklistDesc: 'These folders will be automatically skipped:',
-                blacklistTip: 'Enter one folder name per line, files in these folders and their subfolders will be skipped.',
+                blacklistFoldersDesc: 'These folders will be automatically skipped:',
+                blacklistFoldersTip: 'Tip: Enter one folder name per line. Files in these folders and their subfolders will be skipped.',
+                blacklistExtDesc: 'Files with these extensions will be automatically skipped:',
+                blacklistExtTip: 'Tip: Enter one file extension per line (e.g. .jpg or jpg). Files with these extensions will be skipped.',
                 supportedFileTypes: 'Supported File Types',
                 codeFiles: 'Code Files',
                 otherFiles: 'Other Files',
@@ -567,6 +590,9 @@
 
         // 保存用户默认黑名单（不包含可选的.git）
         let DEFAULT_BLACKLIST_FOLDERS = BLACKLIST_FOLDERS.filter(folder => folder !== '.git');
+
+        // 新增扩展名黑名单
+        let BLACKLIST_EXTENSIONS = [];
 
         // 存储选择的文件
         let selectedFiles = new Map();
@@ -740,10 +766,20 @@
         
         // 添加黑名单检查函数
         function isInBlacklist(filePath) {
-            return BLACKLIST_FOLDERS.some(folder => 
+            // 检查文件夹是否在黑名单中
+            const inFolderBlacklist = BLACKLIST_FOLDERS.some(folder => 
                 filePath.split('/').includes(folder) || 
                 filePath.split('\\').includes(folder)
             );
+            
+            if (inFolderBlacklist) return true;
+            
+            // 检查文件扩展名是否在黑名单中
+            return BLACKLIST_EXTENSIONS.some(ext => {
+                // 确保扩展名格式正确（以.开头）
+                const formattedExt = ext.startsWith('.') ? ext : '.' + ext;
+                return filePath.toLowerCase().endsWith(formattedExt.toLowerCase());
+            });
         }
 
         // 修改文件处理函数
@@ -763,7 +799,7 @@
             const userBlacklist = blacklistInput.value
                 .split('\n')
                 .map(item => item.trim())
-                .filter(item => item !== '' && item !== '.git'); // 排除.git，由选项控制
+                .filter(item => item !== '');
             
             // 根据ignoreGit选项确定最终的黑名单
             BLACKLIST_FOLDERS = shouldIgnoreGit 
@@ -772,6 +808,17 @@
             
             // 更新文本框以反映当前设置
             blacklistInput.value = BLACKLIST_FOLDERS.join('\n');
+            
+            // 更新扩展名黑名单
+            const blacklistExtInput = document.getElementById('blacklistExtInput');
+            BLACKLIST_EXTENSIONS = blacklistExtInput.value
+                .split('\n')
+                .map(item => {
+                    // 确保扩展名格式正确（以.开头）
+                    item = item.trim();
+                    return item !== '' ? (item.startsWith('.') ? item : '.' + item) : '';
+                })
+                .filter(item => item !== '');
             
             // 过滤掉黑名单文件
             const filteredFolderFiles = folderFiles.filter(file => {
@@ -968,6 +1015,10 @@
             const blacklistInput = document.getElementById('blacklistInput');
             blacklistInput.value = BLACKLIST_FOLDERS.join('\n');
             
+            // 初始化扩展名黑名单输入框
+            const blacklistExtInput = document.getElementById('blacklistExtInput');
+            blacklistExtInput.value = BLACKLIST_EXTENSIONS.join('\n');
+            
             // 更新选择的文件统计
             updateFileStats();
             
@@ -1027,17 +1078,33 @@
                 .map(item => item.trim())
                 .filter(item => item !== '');
             
+            // 保存扩展名黑名单
+            const blacklistExtInput = document.getElementById('blacklistExtInput');
+            BLACKLIST_EXTENSIONS = blacklistExtInput.value
+                .split('\n')
+                .map(item => {
+                    // 确保扩展名格式正确（以.开头）
+                    item = item.trim();
+                    return item !== '' ? (item.startsWith('.') ? item : '.' + item) : '';
+                })
+                .filter(item => item !== '');
+            
             // 更新文件统计
             updateFileStats();
             
-            // 显示保存成功提示
-            const status = document.getElementById('status');
-            status.innerHTML = `
-                <div class="flex items-center space-x-2 text-sm mb-2 bg-green-50 p-3 rounded">
-                    <span class="text-green-500">✓</span>
-                    <span class="text-green-700">${TRANSLATIONS[currentLang].blacklistUpdated}</span>
-                </div>
-            `;
+            // 显示保存成功提示 - 修改为在按钮旁边显示
+            const saveStatus = document.getElementById('saveStatus');
+            saveStatus.classList.remove('hidden');
+            saveStatus.style.opacity = '1';
+            
+            // 添加自动消失的效果
+            setTimeout(() => {
+                // 用淡出效果移除提示
+                saveStatus.style.opacity = '0';
+                setTimeout(() => {
+                    saveStatus.classList.add('hidden');
+                }, 500);
+            }, 3000);
         }
 
         // 添加文件统计更新函数
