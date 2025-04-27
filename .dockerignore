@@ -1,0 +1,14 @@
+# 版本控制和 CI 配置
+.git
+.github
+
+# 构建脚本本身
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 文档或其它说明
+*.md
+
+# 本地临时 / 日志（可选）
+*.log

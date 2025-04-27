@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  codemerge:
+    image: ghcr.io/konbakuyomu/codemerge:latest   # ← 镜像完整地址
+    container_name: codemerge
+    ports:
+      - "3996:80"      # 把宿主机 8080 映射到容器 80
+    restart: unless-stopped
